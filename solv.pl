@@ -93,6 +93,16 @@ while ($modified > 0) {
   &show(\@board, 'Unique candidate ('.$tmp.'):');
 }
 
+$modified = 999;
+while ($modified > 0) {
+  $modified = 0;
+
+  @board = &fixUniqCandidate(\@board);
+  my $tmp = shift(@board);
+  $modified += $tmp;
+  &show(\@board, 'Unique candidate ('.$tmp.'):');
+}
+
 &checkBoard(\@board);
 
 exit;
@@ -380,7 +390,7 @@ sub cleanWithXWing {
     }
 
     foreach my $cand (keys %count) {
-      if ((scalar @{$count{$cnad}}) == 2) {
+      if ((scalar @{$count{$cand}}) == 2) {
         foreach my $cell (@{$count{$cand}}) {
           $just2{$cand}{$cell->[0]}{$cell->[1]} = 1;
         }
@@ -388,7 +398,42 @@ sub cleanWithXWing {
     }
   }
 
-  
+  my %xwingPair;
+  foreach my $cand (keys %just2) {
+    my @listRow = sort {$a <=> $b} (keys %{$just2{$cand}});
+
+    for (my $rowAIdx=0;$rowAIdx<@listRow;$rowAIdx ++) {
+      my $rowA = $listRow[$rowAIdx];
+      my @cols = grep {$just2{$cand}{$rowA}{$_} == 1} (keys %{$just2{$cand}{$rowA}});
+
+      for (my $rowBIdx=$rowAIdx+1;$rowBIdx<@listRow;$rowBIdx ++) {
+        my $rowB = $listRow[$rowBIdx];
+
+        if (($just2{$cand}{$rowB}{$cols[0]} == 1) && ($just2{$cand}{$rowB}{$cols[1]} == 1)) {
+          $xwingPair{$cand}{'Rows'} = [sort{$a <=> $b} ($rowA, $rowB)];
+          $xwingPair{$cand}{'Cols'} = [sort{$a <=> $b} (@cols)];
+        }
+      }
+    }
+  }
+
+  foreach my $cand (keys %xwingPair) {
+    @res = &removeCandidate(
+             \@res, 
+             [@{$groupCell{'Col'.$xwingPair{$cand}{'Cols'}[0]}}, @{$groupCell{'Col'.$xwingPair{$cand}{'Cols'}[1]}}],
+             [$cand],
+             [
+               [$xwingPair{$cand}{'Rows'}[0], $xwingPair{$cand}{'Cols'}[0]],
+               [$xwingPair{$cand}{'Rows'}[0], $xwingPair{$cand}{'Cols'}[1]],
+               [$xwingPair{$cand}{'Rows'}[1], $xwingPair{$cand}{'Cols'}[0]],
+               [$xwingPair{$cand}{'Rows'}[1], $xwingPair{$cand}{'Cols'}[1]]
+             ]
+           );
+    my $tmp = shift(@res);
+    $mod += $tmp;
+  }
+
+  return($mod, @res);
 }
 
 sub checkBoard {
