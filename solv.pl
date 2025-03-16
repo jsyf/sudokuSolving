@@ -93,6 +93,7 @@ while ($modified > 0) {
   &show(\@board, 'Unique candidate ('.$tmp.'):');
 }
 
+=h
 $modified = 999;
 while ($modified > 0) {
   $modified = 0;
@@ -102,6 +103,7 @@ while ($modified > 0) {
   $modified += $tmp;
   &show(\@board, 'Unique candidate ('.$tmp.'):');
 }
+=cut
 
 &checkBoard(\@board);
 
@@ -434,6 +436,26 @@ sub cleanWithXWing {
   }
 
   return($mod, @res);
+}
+
+sub cleanWithSwordfish {
+  my @res = @{$_[0]};
+
+  my $mod = 0;
+
+  foreach my $this ('Row', 'Col') {
+    my ($that) = grep {$_ !~ /${this}/} ("Row", "Col");
+    my %collect; # Number, x, y
+    foreach my $i (0..8) {
+      foreach my $cell ($groupCell{$this.$i}) {
+        foreach my $cand (grep {$res[$cell->[0]][$cell->[1]]{'Candidate'}{$_} == 1} (keys %{$res[$cell->[0]][$cell->[1]]{'Candidate'}})) {
+          $collect{$cand}{$$cell->[0]}{$cell->[1]} = 1;
+        }
+      }
+    }
+
+    
+  }
 }
 
 sub checkBoard {
