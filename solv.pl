@@ -72,16 +72,22 @@ $modified = 999;
 while ($modified > 0) {
   $modified = 0;
 
-  @board = &cleanWithXWing(\@board);
+  #@board = &cleanWithXWing(\@board);
+  @board = &cleanWithSwordfish(\@board);
   my $tmp = shift(@board);
   $modified += $tmp;
-  &show(\@board, 'X-Wing cleaning ('.$tmp.'):');
+  #&show(\@board, 'X-Wing cleaning ('.$tmp.'):');
+  &show(\@board, 'Swordfish cleaning ('.$tmp.'):');
 
   @board = &fixSingleCandidate(\@board);
   my $tmp = shift(@board);
   $modified += $tmp;
   &show(\@board, 'Fix single ('.$tmp.'):');
 }
+
+
+
+
 
 $modified = 999;
 while ($modified > 0) {
@@ -448,13 +454,79 @@ sub cleanWithSwordfish {
     my %collect; # Number, x, y
     foreach my $i (0..8) {
       foreach my $cell ($groupCell{$this.$i}) {
-        foreach my $cand (grep {$res[$cell->[0]][$cell->[1]]{'Candidate'}{$_} == 1} (keys %{$res[$cell->[0]][$cell->[1]]{'Candidate'}})) {
-          $collect{$cand}{$$cell->[0]}{$cell->[1]} = 1;
+        my $j;
+        if ($that eq 'Col') {
+          $j = $cell->[1];
+        }
+        elsif ($that eq 'Row') {
+          $j = $cell->[0];
+        }
+        else {
+          next;
+        }
+print 'chk pnt 5'.$/;
+
+        foreach my $cand (keys %{$res[$cell->[0]][$cell->[1]]{'Candidate'}}) {
+          if ($res[$cell->[0]][$cell->[1]]{'Candidate'}{$cand} == 0) {
+            next;
+          }
+print 'chk pnt 6'.$/;
+          $collect{$cand}{$i}{$j} = 1;
         }
       }
     }
 
-    
+    my %candPattern; # candidate, join_J, I
+    foreach my $cand (sort{$a <=> $b} (keys %collect)) {
+      foreach my $i (sort{$a <=> $b} (keys %{$collect{$cand}})) {
+        $candPattern{$cand}{join('', (sort{$a <=> $b} (keys %{$collect{$cand}{$i}})))}{$i} = 1;
+      }
+    }
+
+    undef(%collect);
+print 'chk pnt 9'.$/;
+
+    foreach my $cand (sort{$a <=> $b} (keys %candPattern)) {
+      foreach my $pattern (sort{$a <=> $b} (keys %candPattern)) {
+        my @listI;
+
+        my @allCombination;
+        &patternCombination($pattern, 0, '', \@allCombination);
+
+        foreach my $comb (@allCombination) {
+          if (defined($candPattern{$cand}{$comb})) {
+            push(@listI, (keys %{$candPattern{$cand}{$comb}}));
+          }
+        }
+
+        if ((scalar @listI) != length($pattern)) {
+          next;
+        }
+
+        my @removePool;
+        my @except;
+        foreach my $j (@{[split('', $pattern)]}) {
+          push(@removePool, @{$groupCell{$that.$j}});
+
+          foreach my $i (@listI) {
+            if ($this eq 'Row') {
+              push(@except, [$i, $j]);
+            }
+            elsif ($this eq 'Col') {
+              push(@except, [$j, $i]);
+            }
+          }
+        }
+
+        @res = &removeCandidate(\@res, \@removePool, [$cand], \@except);
+        my $tmp = shift(@res);
+        $mod += $tmp;
+      }
+    }
+
+    #my @allCombination;
+    #&patternCombination($pattern, 0, '', \@allCombination);
+
   }
 }
 
