@@ -1,5 +1,18 @@
 #!/usr/bin/env perl
-use strict;
+#use strict;
+
+use Devel::Size 'total_size';
+use BSD::Resource;
+#use JSON;
+
+#my ($maxrss) = getrusage(RUSAGE_SELF);
+#my @head = getrusage(RUSAGE_SELF);
+#print "Memory usage: $maxrss KB\n";
+#print to_json(\@head);
+#print "\n";
+printf("Memory usage:  %s,  %s\n", @{[getrusage(RUSAGE_SELF)]}[2,3]);
+
+#print "Memory usage: ".(getrusage(RUSAGE_SELF))." KB\n";
 
 my %groupCell;
 my %cellGroup;
@@ -22,7 +35,7 @@ my @board = &read('q.txt');
 my $modified = 0;
 @board = &scanFixed(\@board);
 $modified = shift(@board);
-&show(\@board, 'Scan fixed cells ('.$modified.'):');
+#&show(\@board, 'Scan fixed cells ('.$modified.'):');
 
 while ($modified > 0) {
   $modified = 0;
@@ -30,7 +43,7 @@ while ($modified > 0) {
   @board = &fixSingleCandidate(\@board);
   my $tmp = shift(@board);
   $modified += $tmp;
-  &show(\@board, 'Fix single ('.$tmp.'):');
+  #&show(\@board, 'Fix single ('.$tmp.'):');
 }
 
 $modified = 999;
@@ -40,7 +53,7 @@ while ($modified > 0) {
   @board = &fixUniqCandidate(\@board);
   my $tmp = shift(@board);
   $modified += $tmp;
-  &show(\@board, 'Unique candidate ('.$tmp.'):');
+  #&show(\@board, 'Unique candidate ('.$tmp.'):');
 }
 
 $modified = 999;
@@ -50,12 +63,12 @@ while ($modified > 0) {
   @board = &cleanWithNakedPair(\@board);
   my $tmp = shift(@board);
   $modified += $tmp;
-  &show(\@board, 'Naked pair cleaning ('.$tmp.'):');
+  #&show(\@board, 'Naked pair cleaning ('.$tmp.'):');
 
   @board = &fixSingleCandidate(\@board);
   my $tmp = shift(@board);
   $modified += $tmp;
-  &show(\@board, 'Fix single ('.$tmp.'):');
+  #&show(\@board, 'Fix single ('.$tmp.'):');
 }
 
 $modified = 999;
@@ -65,7 +78,7 @@ while ($modified > 0) {
   @board = &fixUniqCandidate(\@board);
   my $tmp = shift(@board);
   $modified += $tmp;
-  &show(\@board, 'Unique candidate ('.$tmp.'):');
+  #&show(\@board, 'Unique candidate ('.$tmp.'):');
 }
 
 $modified = 999;
@@ -82,7 +95,7 @@ while ($modified > 0) {
   @board = &fixSingleCandidate(\@board);
   my $tmp = shift(@board);
   $modified += $tmp;
-  &show(\@board, 'Fix single ('.$tmp.'):');
+  #&show(\@board, 'Fix single ('.$tmp.'):');
 }
 
 
@@ -96,7 +109,7 @@ while ($modified > 0) {
   @board = &fixUniqCandidate(\@board);
   my $tmp = shift(@board);
   $modified += $tmp;
-  &show(\@board, 'Unique candidate ('.$tmp.'):');
+  #&show(\@board, 'Unique candidate ('.$tmp.'):');
 }
 
 =h
@@ -181,6 +194,8 @@ sub show {
   }
 
   print '====='.$/;
+  #print "Array size: ", total_size($_[0]), " bytes\n";
+  print '-----'.$/;
   if ($message ne '') {
     print $message."\n";
   }
@@ -464,13 +479,25 @@ sub cleanWithSwordfish {
         else {
           next;
         }
+printf("Memory usage:  %s,  %s\n", @{[getrusage(RUSAGE_SELF)]}[2,3]);
 print 'chk pnt 5'.$/;
+printf("Memory usage:  %s,  %s\n", @{[getrusage(RUSAGE_SELF)]}[2,3]);
 
-        foreach my $cand (keys %{$res[$cell->[0]][$cell->[1]]{'Candidate'}}) {
+print 'Res: '.total_size(\@res)."\n";
+print 'chk pnt 5.5'.$/;
+printf("Memory usage:  %s,  %s\n", @{[getrusage(RUSAGE_SELF)]}[2,3]);
+       
+       my %candd = %{$res[$cell->[0]][$cell->[1]]{'Candidate'}};
+print 'Candidate: '.total_size(\%candd)."\n";
+        #foreach my $cand (keys %{$res[$cell->[0]][$cell->[1]]{'Candidate'}}) {
+        foreach my $cand (keys %candd) {
+print 'chk pnt 6'.$/;
+printf("Memory usage:  %s,  %s\n", @{[getrusage(RUSAGE_SELF)]}[2,3]);
           if ($res[$cell->[0]][$cell->[1]]{'Candidate'}{$cand} == 0) {
+print 'chk pnt 7'.$/;
+printf("Memory usage:  %s,  %s\n", @{[getrusage(RUSAGE_SELF)]}[2,3]);
             next;
           }
-print 'chk pnt 6'.$/;
           $collect{$cand}{$i}{$j} = 1;
         }
       }
